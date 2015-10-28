@@ -1,0 +1,5 @@
+{
+  "AppSettings": {
+    "LoialDb": "Server=.\\SqlExpress;Database=Loial;Trusted_Connection=True;"
+  }
+}
