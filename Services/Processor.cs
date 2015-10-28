@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
@@ -37,7 +38,7 @@ namespace Loial
             {
                 try
                 {
-                    var logfile = Path.Combine(_appEnviroment.ApplicationBasePath, "Projects", project.Name, "Logs", project.BuildNumber + ".log");
+                    var logfile = project.GetLogFilePath(_appEnviroment.ApplicationBasePath, project.BuildNumber);
                     ExecuteProject(project, logfile);
                 }
                 catch (Exception ex)
@@ -49,12 +50,28 @@ namespace Loial
             return true;
         }
 
+        private string GetBuildBat(Project project)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"SET JOB_NAME={project.Name}");
+            sb.AppendLine($"SET GIT_BRANCH={project.Branch}");
+            sb.AppendLine($"SET BUILD_NUMBER={project.BuildNumber}");
+            //sb.AppendLine("git clean -f");
+            //sb.AppendLine("git checkout -- .");
+            //sb.AppendLine($"git checkout {project.Branch}");
+            //sb.AppendLine(@"FOR /F "" delims == "" %%i IN ('git rev-parse HEAD') DO SET GIT_COMMIT=%%i");
+            sb.AppendLine(project.Command);
+            return sb.ToString();
+        }
+
         private void ExecuteProject(Project project, string logfile)
         {
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(logfile));
-                Exec(project.Command, msg => File.AppendAllText(logfile, msg));
+                var buildfile = Path.Combine(_appEnviroment.ApplicationBasePath, "Projects", project.Name, "build.bat");
+                File.WriteAllText(buildfile, GetBuildBat(project));
+
+                Exec(buildfile, msg => File.AppendAllText(logfile, msg));
 
                 project.IsRunning = false;
                 _db.SaveChanges();

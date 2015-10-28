@@ -1,0 +1,51 @@
+@model List<Loial.Project>
+@{
+    ViewBag._Title = "Projects";
+    Layout = "_Layout";
+}
+<table class="table table-border table-hover">
+    <thead>
+        <tr>
+            <th>Project</th>
+            <th>IsActive</th>
+            <th>Repository</th>
+            <th>Branch</th>
+            <th>Build</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var project in Model)
+        {
+            <tr>
+                <td><a href="@Url.Action("Project", new {project.Id})">@project.Name</a></td>
+                <td>@project.IsActive</td>
+                <td>@project.Repository</td>
+                <td>@project.Branch</td>
+                <td>
+                    @if (project.BuildNumber == 0)
+                    {
+                    }
+                    else if (!project.IsRunning)
+                    {
+                        <a href="@Url.Action("Log", new {project.Id, project.BuildNumber})">@project.BuildNumber</a>
+                    }
+                    else
+                    {
+                        @project.BuildNumber
+                    }
+                </td>
+                <td>
+                    @if (project.IsRunning)
+                    {
+                        <span><i class="fa fa-spinner fa-spin"></i> Running</span>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Run", new {project.Id})" class="btn btn-primary">Run</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

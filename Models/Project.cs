@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
 
 namespace Loial
 {
@@ -22,9 +23,14 @@ namespace Loial
         public string Command { get; set; }
 
         public int BuildNumber { get; set; }
-
         public bool IsActive { get; set; }
-
         public bool IsRunning { get; set; }
+
+        public string GetLogFilePath(string basePath, int buildNumber)
+        {
+            var path = Path.Combine(basePath, "Projects", Name, "Logs", buildNumber + ".log");
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            return path;
+        }
     };
 }

@@ -1,0 +1,16 @@
+@model Loial.Project
+@{
+    ViewBag._Title = "Builds";
+    Layout = "_Layout";
+    var builds = Enumerable.Range(Model.BuildNumber - 19, 20).Where(x => x > 0).Reverse().ToList();
+}
+<ul class="nav nav-tabs">
+    <li role="presentation" class="active"><a href="#">Builds</a></li>
+    <li role="presentation"><a href="@Url.Action("Project", new {Model.Id})">Edit</a></li>
+</ul>
+<ul>
+    @foreach (var build in builds)
+    {
+        <li><a href="@Url.Action("Log", new {Model.Id, BuildNumber = build})">Build Log @build</a></li>
+    }
+</ul>
