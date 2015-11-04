@@ -50,7 +50,7 @@ namespace Loial
             return true;
         }
 
-        private string GetBuildBat(Project project)
+        private string GetBuildBatContents(Project project)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"SET JOB_NAME={project.Name}");
@@ -68,8 +68,8 @@ namespace Loial
         {
             try
             {
-                var buildfile = Path.Combine(_appEnviroment.ApplicationBasePath, "Projects", project.Name, "build.bat");
-                File.WriteAllText(buildfile, GetBuildBat(project));
+                var buildfile = Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), "build.bat");
+                File.WriteAllText(buildfile, GetBuildBatContents(project));
 
                 Exec(buildfile, msg => File.AppendAllText(logfile, msg));
 
