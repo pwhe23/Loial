@@ -10,19 +10,22 @@
 <form method="POST">
     <div class="form-group">
         <label>Id</label>
-        @Html.HiddenFor(x => x.Id)
         <div class="form-control">@Model.Id</div>
     </div>
     <div class="form-group">
-        <label>Name</label>
+        <label>Project Display Name</label>
         @Html.TextBoxFor(x => x.Name, new { @class = "form-control" })
     </div>
     <div class="checkbox">
         <label>@Html.CheckBoxFor(x => x.IsActive) Is Active</label>
     </div>
     <div class="form-group">
-        <label>Repository</label>
+        <label>Repository Name</label>
         @Html.TextBoxFor(x => x.Repository, new { @class = "form-control" })
+    </div>
+    <div class="form-group">
+        <label>Clone Url</label>
+        @Html.TextBoxFor(x => x.CloneUrl, new { @class = "form-control" })
     </div>
     <div class="form-group">
         <label>Branch</label>
@@ -33,4 +36,9 @@
         @Html.TextAreaFor(x => x.Command, new { @class = "form-control", rows = 4 })
     </div>
     <button class="btn btn-primary">Save</button>
+    @if (Model.Id > 0)
+    {
+        <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <a href="@Url.Action("Delete", new {Model.Id})" class="btn btn-warning">Delete</a>
+    }
 </form>

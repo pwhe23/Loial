@@ -38,8 +38,12 @@ namespace Loial
             {
                 try
                 {
+                    var workspace = Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), "workspace");
+                    var workspaceExists = Directory.Exists(workspace);
+                    if (!workspaceExists) Directory.CreateDirectory(workspace);
+
                     var logfile = project.GetLogFilePath(_appEnviroment.ApplicationBasePath, project.BuildNumber);
-                    ExecuteProject(project, logfile);
+                    ExecuteProject(project, logfile, !workspaceExists);
                 }
                 catch (Exception ex)
                 {
@@ -50,26 +54,29 @@ namespace Loial
             return true;
         }
 
-        private string GetBuildBatContents(Project project)
+        private string GetBuildBatContents(Project project, bool clone)
         {
             var sb = new StringBuilder();
+            sb.AppendLine("SET HOME=%USERPROFILE%"); //for %HOME%\_netrc support
             sb.AppendLine($"SET JOB_NAME={project.Name}");
             sb.AppendLine($"SET GIT_BRANCH={project.Branch}");
             sb.AppendLine($"SET BUILD_NUMBER={project.BuildNumber}");
-            //sb.AppendLine("git clean -f");
+            sb.AppendLine("CD workspace");
+            if (clone) sb.AppendLine($"git clone {project.CloneUrl} .");
+            sb.AppendLine("git clean -f");
             //sb.AppendLine("git checkout -- .");
-            //sb.AppendLine($"git checkout {project.Branch}");
+            sb.AppendLine($"git checkout {project.Branch}");
             //sb.AppendLine(@"FOR /F "" delims == "" %%i IN ('git rev-parse HEAD') DO SET GIT_COMMIT=%%i");
             sb.AppendLine(project.Command);
             return sb.ToString();
         }
 
-        private void ExecuteProject(Project project, string logfile)
+        private void ExecuteProject(Project project, string logfile, bool clone)
         {
             try
             {
                 var buildfile = Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), "build.bat");
-                File.WriteAllText(buildfile, GetBuildBatContents(project));
+                File.WriteAllText(buildfile, GetBuildBatContents(project, clone));
 
                 Exec(buildfile, msg => File.AppendAllText(logfile, msg));
 
@@ -115,7 +122,8 @@ namespace Loial
 
         private static bool Exec(string cmd, Action<string> log, bool throws = false)
         {
-            log($"EXEC: {cmd}");
+            var sb = new StringBuilder();
+            sb.AppendLine($"EXEC: {cmd}");
             var process = new Process();
             try
             {
@@ -125,19 +133,16 @@ namespace Loial
                 //process.StartInfo.Verb = "runas";
                 process.StartInfo.FileName = "cmd.exe";
                 process.StartInfo.Arguments = "/C " + cmd;
+                process.StartInfo.WorkingDirectory = Path.GetDirectoryName(cmd);
                 //process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 process.Start();
 
-                while (!process.HasExited)
-                {
-                    log(process.StandardOutput.ReadToEnd());
-                    log(process.StandardError.ReadToEnd());
-                }
+                process.OutputDataReceived += (sender, e) => sb.AppendLine(e.Data);
+                process.BeginOutputReadLine();
+                process.ErrorDataReceived += (sender, e) => sb.AppendLine(e.Data);
+                process.BeginErrorReadLine();
                 process.WaitForExit(); //5 * 60 * 1000
-                log(process.StandardOutput.ReadToEnd());
-                log(process.StandardError.ReadToEnd());
 
-                //Console.WriteLine("Process.ExitCode: " + process.ExitCode);
                 if (process.ExitCode != 0)
                 {
                     if (throws)
@@ -146,7 +151,7 @@ namespace Loial
                     }
                     else
                     {
-                        log($"Process failed, ExitCode: {process.ExitCode}");
+                        sb.AppendLine($"Process failed, ExitCode: {process.ExitCode}");
                         return false;
                     }
                 }
@@ -154,6 +159,7 @@ namespace Loial
             }
             finally
             {
+                log(sb.ToString());
                 process.Close();
             }
         }

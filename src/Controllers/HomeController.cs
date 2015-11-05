@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Http.Internal;
 using Microsoft.AspNet.Mvc;
+using Microsoft.Data.Entity;
 using Microsoft.Dnx.Runtime;
 
 namespace Loial
@@ -27,6 +29,12 @@ namespace Loial
             return View(projects);
         }
 
+        public IActionResult Builds(int id)
+        {
+            var project = _db.Projects.Single(x => x.Id == id);
+            return View(project);
+        }
+
         public IActionResult Project(int? id)
         {
             var project = _db.Projects.SingleOrDefault(x => x.Id == id)
@@ -34,16 +42,10 @@ namespace Loial
             return View(project);
         }
 
-        public IActionResult Builds(int id)
-        {
-            var project = _db.Projects.Single(x => x.Id == id);
-            return View(project);
-        }
-
         [HttpPost]
-        public async Task<IActionResult> Project(int id)
+        public async Task<IActionResult> Project(int? id, FormCollection form)
         {
-            var project = _db.Projects.SingleOrDefault(x => x.Id == id)
+            var project = await _db.Projects.SingleOrDefaultAsync(x => x.Id == id)
                           ?? _db.Projects.Add(new Project()).Entity;
 
             await TryUpdateModelAsync(project);
@@ -52,10 +54,26 @@ namespace Loial
             return RedirectToAction("Index");
         }
 
+        public async Task<IActionResult> Delete(int id)
+        {
+            var project = await _db.Projects.SingleOrDefaultAsync(x => x.Id == id);
+            _db.Projects.Remove(project);
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Index");
+        }
+
         public IActionResult Run(int id)
         {
             var project = _db.Projects.Single(x => x.Id == id);
             _processor.Run(project);
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult Cancel(int id)
+        {
+            var project = _db.Projects.Single(x => x.Id == id);
+            project.IsRunning = false;
+            _db.SaveChanges();
             return RedirectToAction("Index");
         }
 

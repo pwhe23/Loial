@@ -3,6 +3,7 @@
     ViewBag._Title = "Projects";
     Layout = "_Layout";
 }
+<a href="@Url.Action("Project")" class="btn btn-default">Add Project</a>
 <table class="table table-border table-hover">
     <thead>
         <tr>
@@ -39,6 +40,7 @@
                     @if (project.IsRunning)
                     {
                         <span><i class="fa fa-spinner fa-spin"></i> Running</span>
+                        <a href="@Url.Action("Cancel", new {project.Id})" class="btn btn-warning">Cancel</a>
                     }
                     else
                     {
