@@ -65,7 +65,7 @@ namespace Loial
         public IActionResult Run(int id)
         {
             var project = _db.Projects.Single(x => x.Id == id);
-            _processor.Run(project);
+            _processor.Run(project, project.Branch);
             return RedirectToAction("Index");
         }
 

@@ -22,7 +22,7 @@ namespace Loial
             _appEnviroment = appEnviroment;
         }
 
-        public bool Run(Project project)
+        public bool Run(Project project, string branch)
         {
             if (project == null)
                 return false;
@@ -39,7 +39,7 @@ namespace Loial
                 try
                 {
                     var logfile = project.GetLogFilePath(_appEnviroment.ApplicationBasePath, project.BuildNumber);
-                    ExecuteProject(project, logfile);
+                    ExecuteProject(project, logfile, branch);
                 }
                 catch (Exception ex)
                 {
@@ -50,15 +50,14 @@ namespace Loial
             return true;
         }
 
-        private string GetBuildBatContents(Project project, string globalBuild)
+        private string GetBuildBatContents(Project project, string globalBuild, string branch)
         {
-            var branch = project.Branch;
             var sb = new StringBuilder();
             sb.AppendLine(":: Project Settings :::::::::::::::::::::::");
             sb.AppendLine($"SET JOB_NAME={project.Name}");
-            sb.AppendLine($"SET GIT_BRANCH={branch}");
             sb.AppendLine($"SET BUILD_NUMBER={project.BuildNumber}");
-            sb.AppendLine($"SET CLONE_URL={project.CloneUrl}");
+            sb.AppendLine($"SET GIT_REPO={project.Repository}");
+            sb.AppendLine($"SET GIT_BRANCH={branch}");
             sb.AppendLine();
             sb.AppendLine(":: Global Build Script :::::::::::::::::::::");
             sb.AppendLine(File.ReadAllText(globalBuild));
@@ -68,13 +67,13 @@ namespace Loial
             return sb.ToString();
         }
 
-        private void ExecuteProject(Project project, string logfile)
+        private void ExecuteProject(Project project, string logfile, string branch)
         {
             try
             {
                 var globalBuild = Path.GetFullPath(Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), @"..\GlobalBuild.bat"));
                 var buildfile = Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), "build.bat");
-                File.WriteAllText(buildfile, GetBuildBatContents(project, globalBuild));
+                File.WriteAllText(buildfile, GetBuildBatContents(project, globalBuild, branch));
 
                 Exec(buildfile, msg => File.AppendAllText(logfile, msg));
 

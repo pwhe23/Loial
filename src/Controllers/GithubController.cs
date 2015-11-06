@@ -1,7 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Common;
 using Microsoft.AspNet.Mvc;
-using Microsoft.Data.Entity;
-using Newtonsoft.Json;
 
 namespace Loial
 {
@@ -18,20 +18,17 @@ namespace Loial
         }
 
         [HttpPost, Route("PushEvent")]
-        public async Task<dynamic> PushEvent([FromBody] Github.PushEvent pushEvent)
+        public dynamic PushEvent([FromBody] Github.PushEvent pushEvent)
         {
-            var repo = pushEvent.Repository.Full_Name;
-            var branch = pushEvent.Ref.Replace("refs/heads/", "");
+            var repo = pushEvent?.Repository?.Full_Name;
+            var branch = pushEvent?.Ref?.Replace("refs/heads/", "");
 
-            var project = await _db
-                .Projects
-                .SingleOrDefaultAsync(x => x.Repository == repo
-                                           && x.Branch == branch);
-
-            if (project == null)
+            var projects = FindProjects(repo, branch);
+            if (projects.Count == 0)
             {
-                System.IO.File.AppendAllText(@"C:\Temp\Loial_GithubController_PushEvent_Errors.log",
-                    JsonConvert.SerializeObject(pushEvent, Formatting.Indented));
+                //System.IO.File.AppendAllText(@"C:\Temp\Loial_GithubController_PushEvent_Errors.log",
+                //    JsonConvert.SerializeObject(pushEvent, Formatting.Indented) + Environment.NewLine);
+
                 return new
                 {
                     error = "Project not found",
@@ -41,12 +38,31 @@ namespace Loial
                 };
             }
 
-            var started = _processor.Run(project);
-            return new
+            var results = new List<dynamic>();
+            foreach (var project in projects)
             {
-                started,
-                project
-            };
+                var started = _processor.Run(project, branch);
+                results.Add(new
+                {
+                    started,
+                    project
+                });
+            }
+
+            return results;
+        }
+
+        private List<Project> FindProjects(string repo, string branch)
+        {
+            if (string.IsNullOrWhiteSpace(repo) || string.IsNullOrWhiteSpace(branch))
+                return new List<Project>();
+
+            return _db
+                .Projects
+                .Where(x => x.Repository == repo && x.IsActive)
+                .ToArray()
+                .Where(x => Ext.LikeString(x.Branch, branch))
+                .ToList();
         }
     };
 }

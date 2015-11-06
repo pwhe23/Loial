@@ -16,9 +16,6 @@ namespace Loial
         [StringLength(100), Required]
         public string Repository { get; set; }
 
-        [StringLength(100), Required]
-        public string CloneUrl { get; set; }
-
         [StringLength(50), Required]
         public string Branch { get; set; }
 

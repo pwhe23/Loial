@@ -24,3 +24,9 @@ LINKS
 https://developer.github.com/webhooks/
 http://stackoverflow.com/questions/6565357/git-push-requires-username-and-password
 https://www.microsoft.com/en-us/download/confirmation.aspx?id=42637
+
+TODO
+* Slack integration
+* dynamic view console output
+* signalr refresh project list status
+* Make Projects path configurable

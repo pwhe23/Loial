@@ -20,7 +20,16 @@
         {
             <tr>
                 <td><a href="@Url.Action("Project", new {project.Id})">@project.Name</a></td>
-                <td>@project.IsActive</td>
+                <td>
+                    @if (project.IsActive)
+                    {
+                        <span class="label label-success">True</span>
+                    }
+                    else
+                    {
+                        <span class="label label-warning">False</span>
+                    }
+                </td>
                 <td>@project.Repository</td>
                 <td>@project.Branch</td>
                 <td>
