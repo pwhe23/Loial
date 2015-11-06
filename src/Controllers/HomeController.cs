@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Http.Internal;
 using Microsoft.AspNet.Mvc;
@@ -32,7 +33,15 @@ namespace Loial
         public IActionResult Builds(int id)
         {
             var project = _db.Projects.Single(x => x.Id == id);
-            return View(project);
+            ViewBag.Id = project.Id;
+
+            var dir = new DirectoryInfo(Path.Combine(project.GetFolder(_appEnvironment.ApplicationBasePath), "Logs"));
+            var files = dir
+                .GetFiles()
+                .OrderByDescending(x => x.CreationTime)
+                .ToList();
+
+            return View(files);
         }
 
         public IActionResult Project(int? id)

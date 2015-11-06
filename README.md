@@ -28,5 +28,7 @@ https://www.microsoft.com/en-us/download/confirmation.aspx?id=42637
 TODO
 * Slack integration
 * dynamic view console output
-* signalr refresh project list status
 * Make Projects path configurable
+* Use Hangfire as background build processor
+    * signalr refresh project list status
+    * build failed or not

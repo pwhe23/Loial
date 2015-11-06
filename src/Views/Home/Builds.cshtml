@@ -1,16 +1,27 @@
-@model Loial.Project
+@model List<System.IO.FileInfo>
 @{
     ViewBag._Title = "Builds";
     Layout = "_Layout";
-    var builds = Enumerable.Range(Model.BuildNumber - 19, 20).Where(x => x > 0).Reverse().ToList();
 }
 <ul class="nav nav-tabs">
     <li role="presentation" class="active"><a href="#">Builds</a></li>
-    <li role="presentation"><a href="@Url.Action("Project", new {Model.Id})">Edit</a></li>
+    <li role="presentation"><a href="@Url.Action("Project", new {ViewBag.Id})">Edit</a></li>
 </ul>
-<ul>
-    @foreach (var build in builds)
-    {
-        <li><a href="@Url.Action("Log", new {Model.Id, BuildNumber = build})">Build Log @build</a></li>
-    }
-</ul>
+<table class="table table-hover autowidth">
+    <thead>
+        <tr>
+            <th>Build</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var file in Model)
+        {
+            var buildNumber = System.IO.Path.GetFileNameWithoutExtension(file.Name);
+            <tr>
+                <td><a href="@Url.Action("Log", new {ViewBag.Id, buildNumber})">Build Log @buildNumber</a></td>
+                <td>@file.CreationTime</td>
+            </tr>
+        }
+    </tbody>
+</table>

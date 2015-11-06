@@ -2,3 +2,11 @@
     font-family: monospace;
     font-weight: normal;
 }
+
+.table.table-hover td {
+    border: none;
+}
+
+.autowidth {
+    width: auto;
+}
