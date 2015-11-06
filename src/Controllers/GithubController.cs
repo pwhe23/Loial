@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Microsoft.Data.Entity;
+using Newtonsoft.Json;
 
 namespace Loial
 {
@@ -28,11 +29,17 @@ namespace Loial
                                            && x.Branch == branch);
 
             if (project == null)
+            {
+                System.IO.File.AppendAllText(@"C:\Temp\Loial_GithubController_PushEvent_Errors.log",
+                    JsonConvert.SerializeObject(pushEvent, Formatting.Indented));
                 return new
                 {
                     error = "Project not found",
+                    repo,
+                    branch,
                     pushEvent
                 };
+            }
 
             var started = _processor.Run(project);
             return new

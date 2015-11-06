@@ -38,12 +38,8 @@ namespace Loial
             {
                 try
                 {
-                    var workspace = Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), "workspace");
-                    var workspaceExists = Directory.Exists(workspace);
-                    if (!workspaceExists) Directory.CreateDirectory(workspace);
-
                     var logfile = project.GetLogFilePath(_appEnviroment.ApplicationBasePath, project.BuildNumber);
-                    ExecuteProject(project, logfile, !workspaceExists);
+                    ExecuteProject(project, logfile);
                 }
                 catch (Exception ex)
                 {
@@ -54,29 +50,31 @@ namespace Loial
             return true;
         }
 
-        private string GetBuildBatContents(Project project, bool clone)
+        private string GetBuildBatContents(Project project, string globalBuild)
         {
+            var branch = project.Branch;
             var sb = new StringBuilder();
-            sb.AppendLine("SET HOME=%USERPROFILE%"); //for %HOME%\_netrc support
+            sb.AppendLine(":: Project Settings :::::::::::::::::::::::");
             sb.AppendLine($"SET JOB_NAME={project.Name}");
-            sb.AppendLine($"SET GIT_BRANCH={project.Branch}");
+            sb.AppendLine($"SET GIT_BRANCH={branch}");
             sb.AppendLine($"SET BUILD_NUMBER={project.BuildNumber}");
-            sb.AppendLine("CD workspace");
-            if (clone) sb.AppendLine($"git clone {project.CloneUrl} .");
-            sb.AppendLine("git clean -f");
-            //sb.AppendLine("git checkout -- .");
-            sb.AppendLine($"git checkout {project.Branch}");
-            //sb.AppendLine(@"FOR /F "" delims == "" %%i IN ('git rev-parse HEAD') DO SET GIT_COMMIT=%%i");
+            sb.AppendLine($"SET CLONE_URL={project.CloneUrl}");
+            sb.AppendLine();
+            sb.AppendLine(":: Global Build Script :::::::::::::::::::::");
+            sb.AppendLine(File.ReadAllText(globalBuild));
+            sb.AppendLine();
+            sb.AppendLine(":: Project Build Script :::::::::::::::::::::");
             sb.AppendLine(project.Command);
             return sb.ToString();
         }
 
-        private void ExecuteProject(Project project, string logfile, bool clone)
+        private void ExecuteProject(Project project, string logfile)
         {
             try
             {
+                var globalBuild = Path.GetFullPath(Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), @"..\GlobalBuild.bat"));
                 var buildfile = Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), "build.bat");
-                File.WriteAllText(buildfile, GetBuildBatContents(project, clone));
+                File.WriteAllText(buildfile, GetBuildBatContents(project, globalBuild));
 
                 Exec(buildfile, msg => File.AppendAllText(logfile, msg));
 
@@ -129,12 +127,10 @@ namespace Loial
             {
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.RedirectStandardOutput = true; // Redirect the output stream of the child process.
-                //process.StartInfo.Verb = "runas";
+                process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.FileName = "cmd.exe";
                 process.StartInfo.Arguments = "/C " + cmd;
                 process.StartInfo.WorkingDirectory = Path.GetDirectoryName(cmd);
-                //process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 process.Start();
 
                 process.OutputDataReceived += (sender, e) => sb.AppendLine(e.Data);
