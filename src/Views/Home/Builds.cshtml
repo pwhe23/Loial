@@ -1,8 +1,9 @@
 @model List<System.IO.FileInfo>
 @{
-    ViewBag._Title = "Builds";
+    ViewBag._Title = "Builds - " + ViewBag.Name;
     Layout = "_Layout";
 }
+<h1>Project: @ViewBag.Name</h1>
 <ul class="nav nav-tabs">
     <li role="presentation" class="active"><a href="#">Builds</a></li>
     <li role="presentation"><a href="@Url.Action("Project", new {ViewBag.Id})">Edit</a></li>
@@ -25,3 +26,4 @@
         }
     </tbody>
 </table>
+<a href="@Url.Action("Index")" class="btn btn-default">Cancel</a>

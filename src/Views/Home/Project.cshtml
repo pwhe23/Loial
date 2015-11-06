@@ -1,8 +1,9 @@
 @model Loial.Project
 @{
-    ViewBag._Title = Model.Id > 0 ? "Edit Project" : "Add Project";
+    ViewBag._Title = Model.Id > 0 ? "Edit Project - " + Model.Name : "Add Project";
     Layout = "_Layout";
 }
+<h1>Project: @Model.Name</h1>
 <ul class="nav nav-tabs">
     <li role="presentation"><a href="@Url.Action("Builds", new {Model.Id})">Builds</a></li>
     <li role="presentation" class="active"><a href="#">Edit</a></li>

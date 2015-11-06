@@ -19,7 +19,7 @@
         @foreach (var project in Model)
         {
             <tr>
-                <td><a href="@Url.Action("Project", new {project.Id})">@project.Name</a></td>
+                <td><a href="@Url.Action("Builds", new {project.Id})">@project.Name</a></td>
                 <td>
                     @if (project.IsActive)
                     {

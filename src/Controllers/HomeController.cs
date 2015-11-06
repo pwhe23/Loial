@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Http.Internal;
 using Microsoft.AspNet.Mvc;
 using Microsoft.Data.Entity;
-using Microsoft.Dnx.Runtime;
+using Microsoft.Framework.OptionsModel;
 
 namespace Loial
 {
@@ -12,13 +12,13 @@ namespace Loial
     {
         private readonly LoialDb _db;
         private readonly Processor _processor;
-        private readonly IApplicationEnvironment _appEnvironment;
+        private readonly string _workspacesPath;
 
-        public HomeController(LoialDb db, Processor processor, IApplicationEnvironment appEnvironment)
+        public HomeController(LoialDb db, Processor processor, IOptions<AppSettings> appSettings)
         {
             _db = db;
             _processor = processor;
-            _appEnvironment = appEnvironment;
+            _workspacesPath = appSettings.Options.WorkspacesPath;
         }
 
         public IActionResult Index()
@@ -27,6 +27,7 @@ namespace Loial
                 .Projects
                 .OrderBy(x => x.Name)
                 .ToList();
+
             return View(projects);
         }
 
@@ -34,9 +35,12 @@ namespace Loial
         {
             var project = _db.Projects.Single(x => x.Id == id);
             ViewBag.Id = project.Id;
+            ViewBag.Name = project.Name;
 
-            var dir = new DirectoryInfo(Path.Combine(project.GetFolder(_appEnvironment.ApplicationBasePath), "Logs"));
-            var files = dir
+            var projectLogsPath = Path.Combine(project.GetFolder(_workspacesPath), "Logs");
+            Directory.CreateDirectory(projectLogsPath);
+
+            var files = new DirectoryInfo(projectLogsPath)
                 .GetFiles()
                 .OrderByDescending(x => x.CreationTime)
                 .ToList();
@@ -89,7 +93,7 @@ namespace Loial
         public IActionResult Log(int id, int? buildNumber)
         {
             var project = _db.Projects.Single(x => x.Id == id);
-            var logfilePath = project.GetLogFilePath(_appEnvironment.ApplicationBasePath, buildNumber ?? project.BuildNumber);
+            var logfilePath = project.GetLogFilePath(_workspacesPath, buildNumber ?? project.BuildNumber);
 
             var log = System.IO.File.Exists(logfilePath)
                 ? System.IO.File.ReadAllText(logfilePath)

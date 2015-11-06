@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Hosting;
-using Microsoft.Dnx.Runtime;
+using Microsoft.Framework.OptionsModel;
 
 namespace Loial
 {
@@ -13,13 +13,13 @@ namespace Loial
     {
         private readonly LoialDb _db;
         private readonly IApplicationLifetime _lifetime;
-        private readonly IApplicationEnvironment _appEnviroment;
+        private readonly string _workspacesPath;
 
-        public Processor(LoialDb db, IApplicationLifetime lifetime, IApplicationEnvironment appEnviroment)
+        public Processor(LoialDb db, IApplicationLifetime lifetime, IOptions<AppSettings> appSettings)
         {
             _db = db;
             _lifetime = lifetime;
-            _appEnviroment = appEnviroment;
+            _workspacesPath = appSettings.Options.WorkspacesPath;
         }
 
         public bool Run(Project project, string branch)
@@ -38,7 +38,7 @@ namespace Loial
             {
                 try
                 {
-                    var logfile = project.GetLogFilePath(_appEnviroment.ApplicationBasePath, project.BuildNumber);
+                    var logfile = project.GetLogFilePath(_workspacesPath, project.BuildNumber);
                     ExecuteProject(project, logfile, branch);
                 }
                 catch (Exception ex)
@@ -71,8 +71,8 @@ namespace Loial
         {
             try
             {
-                var globalBuild = Path.GetFullPath(Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), @"..\GlobalBuild.bat"));
-                var buildfile = Path.Combine(project.GetFolder(_appEnviroment.ApplicationBasePath), "build.bat");
+                var globalBuild = Path.GetFullPath(Path.Combine(project.GetFolder(_workspacesPath), @"..\GlobalBuild.bat"));
+                var buildfile = Path.Combine(project.GetFolder(_workspacesPath), "build.bat");
                 File.WriteAllText(buildfile, GetBuildBatContents(project, globalBuild, branch));
 
                 Exec(buildfile, msg => File.AppendAllText(logfile, msg));

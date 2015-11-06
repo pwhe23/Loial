@@ -1,5 +1,6 @@
 {
   "AppSettings": {
-    "LoialDb": "Server=.\\SqlExpress;Database=Loial;Trusted_Connection=True;"
+    "LoialDb": "Server=.\\SqlExpress;Database=Loial;Trusted_Connection=True;",
+    "WorkspacesPath":  "C:\\Users\\paul.wheeler\\Code\\Loial\\Projects"
   }
 }
